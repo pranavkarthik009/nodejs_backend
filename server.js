@@ -1,10 +1,13 @@
-const {createServer} = require('node:http');
+
+const {createServer} = require('node:http'); //http module import
+require('dotenv').config(); //dotenv module import
 
 const hostname='127.0.0.1';
 const port=3000;
 
 //server creation
 //commit
+
 
 const server = createServer((req,res)=>{
     res.statusCode=200;
