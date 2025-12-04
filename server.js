@@ -39,6 +39,7 @@ server.listen(port,hostname, ()=>{
 
 //connecting to mongoose
 //useNewUrlParser and useUnifiedTopology are options to avoid deprecation warnings
+//what is deprecation warning? A deprecation warning is a message that indicates that a certain feature or practice is outdated and will be removed in future versions of the software. It serves as a heads-up for developers to update their code to use newer, preferred methods or features.
 mongoose.connect(process.env.DB_URL, {useNewUrlParser:true, useUnifiedTopology:true})
 .then(()=>{
     console.log('Connected to mongoose databasse');
