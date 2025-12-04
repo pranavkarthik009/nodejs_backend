@@ -1,6 +1,7 @@
 const { MongoClient }=require('mongodb'); //mongodb module import
 const {createServer} = require('node:http'); //http module import
-require('dotenv').config(); //dotenv module import
+require('dotenv').config();
+const mongoose=require('mongoose'); //dotenv module import
 const app=require('express')(); //express module import
 const hostname='127.0.0.1';
 const port=3000;
@@ -36,6 +37,17 @@ server.listen(port,hostname, ()=>{
     console.log(`Server is running at http://${hostname}:${port}/`);
 }) */
 
+//connecting to mongoose
+//useNewUrlParser and useUnifiedTopology are options to avoid deprecation warnings
+mongoose.connect(process.env.DB_URL, {useNewUrlParser:true, useUnifiedTopology:true})
+.then(()=>{
+    console.log('Connected to mongoose databasse');
+})
+.catch((err)=>{
+    console.error('Error connecting to mongoose database:', err);
+})
+
+//routes
 app.get('/',(req,res)=>{
     res.send('this is a get call');
     console.log('get request');
