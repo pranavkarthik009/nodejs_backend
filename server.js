@@ -5,6 +5,8 @@ const mongoose=require('mongoose'); //dotenv module import
 const app=require('express')(); //express module import
 const hostname='127.0.0.1';
 const port=3000;
+const token=require('jsonwebtoken');
+const bcrypt=require('bcryptjs');
 app.use(require('express').json()); //middleware to parse json request body
 
 //server creation
@@ -47,6 +49,68 @@ mongoose.connect(process.env.DB_URL, {useNewUrlParser:true, useUnifiedTopology:t
 .catch((err)=>{
     console.error('Error connecting to mongoose database:', err);
 })
+
+//user schema
+const userSchema=new mongoose.Schema({
+    name:String,
+    email:String,
+    password:String
+});
+
+//user model
+const User=mongoose.model('User', userSchema);
+
+app.post('/register',async(req,res)=>{
+    const {name,email,password}=req.body;
+
+    //const passwordHash=await bcrypt.hash(password,10);
+    //password=passwordHash;
+    const finduser=await User.findOne({email:email});
+    if(finduser){
+        return res.status(400).send('user already exists');
+    }
+    else{
+        console.log('registering user');
+        try{
+        const hashedpassword=await bcrypt.hash(password,10);
+        const newUser=new User({name,email,password:hashedpassword});
+        await newUser.save();
+        res.status(201).send('user registered successfully');
+     }
+     catch(err){
+        res.status(500).send('error registering user');
+     }
+    }
+    
+    
+})
+
+app.post('/login',async(req,res)=>{
+    const {email,password}=req.body;
+    const finduser=await User.findOne({email:email});
+    if(!finduser){
+        res.status(400).send('user not registered');
+    }
+    else{
+        try{
+           const findpassword=await bcrypt.compare(password,finduser.password);
+           if(findpassword){
+            const jwt=await token.sign({id:finduser._id},process.env.JWT_SECRET,{expiresIn:'1h'});
+            res.cookie('jwt',jwt,{httpOnly:true,secure:true}); //setting cookie with jwt token
+            console.log('user logged in successfully');
+            res.status(200).send('user logged in successfully')
+           }
+           else{
+            res.status(400).send('password doesnt match');
+           } 
+        }
+        catch(err){
+            res.status(400).send('something went wrong');
+        }
+        
+    }
+})
+
 
 //routes
 app.get('/',(req,res)=>{
