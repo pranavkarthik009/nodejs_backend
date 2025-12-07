@@ -57,8 +57,17 @@ const userSchema=new mongoose.Schema({
     password:String
 });
 
+const postSchema=new mongoose.Schema({
+    authorID:String,
+    email:String,
+    title:String,
+    description:String
+})
+
+
 //user model
 const User=mongoose.model('User', userSchema);
+const Post=mongoose.model('Post',postSchema);
 
 app.post('/register',async(req,res)=>{
     const {name,email,password}=req.body;
@@ -111,6 +120,84 @@ app.post('/login',async(req,res)=>{
     }
 })
 
+async function finduserIdbyemail(email){
+    const user=await User.findOne({email:email});
+    if(!user){
+        console.log("user not found");
+        return "";
+    }
+    
+    return user._id;
+}
+
+app.post('/createnewpost',async(req,res)=>{
+    const {email,title,description}=req.body;
+    //verifying author id;
+    try{
+        const authorID=await finduserIdbyemail(email);
+    if(authorID){
+        console.log("author verified");
+        const newPost=new Post({authorID,email,title,description});
+        await newPost.save();
+        res.status(201).send('post created successfully');
+    }
+    else{
+        res.status(400).send('user not found to create post');
+    }
+    }
+    catch(err){
+        console.log('error log'+ err);
+        res.status(400).send('something went wrong');
+
+    }
+    
+
+})
+
+app.get('/getposts',async(req,res)=>{
+    const {email}=req.body;
+    try{
+        const posts=await Post.find({email:email});
+        res.status(200).json(posts);        
+    }
+    catch(err){
+        res.status(500).send('error fetching posts');
+    }
+})
+
+
+
+app.get('/getpostById/:id',async(req,res)=>{
+    const postId=req.params.id;
+    try{
+        const findPost=await Post.findById(postId);
+        console.log('post found'+findPost);
+        res.status(200).json(findPost);
+    }
+    catch(err){
+        console.log('error fetching post by id'+err);
+        res.status(404).send('post not found');
+    }
+    
+    
+})
+
+app.get('/getallpostsbyuser/:email',async(req,res)=>{
+    const email=req.params.email;
+    try{
+        const findposts=await Post.find({email:email});
+        if(findposts){
+            res.status(200).json(findposts);
+        }
+        else{
+            res.status(404).json('no posts found for this user');
+        }
+        
+    }
+    catch(err){
+        res.status(404).status('something went wrong in fetching the posts');
+    }
+})
 
 //routes
 app.get('/',(req,res)=>{
